@@ -1,0 +1,24 @@
+{
+  "name": "digiasset-decoder",
+  "version": "0.0.6",
+  "description": "Given an asset tx will decode the transaction and add output asset data",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Matthew Cornelisse",
+  "license": "MIT",
+  "dependencies": {
+    "base58check": "^2.0.0",
+    "bit-io": "^1.0.1",
+    "digiasset-input": "^0.0.3"
+  },
+  "devDependencies": {
+    "nodeunit": "^0.11.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/digiassetX/digiasset-decoder"
+  }
+}
