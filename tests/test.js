@@ -2230,6 +2230,15 @@ describe('Issuance',function() {
         let results = await assetDecoder(txData);
         expect(results).to.equal( false);
     });
+
+    it('unmovable asset', async () => {
+        let txData = {"txid":"522b12006a8bd21c945b7256733745588c55b074e3f0b2a905aba8861a261354","hash":"41f6f61e0a529ca88cc1ed86ba69e91bb801d35a7736042917ee6313a9eb4d96","version":1,"size":277,"vsize":196,"weight":781,"locktime":0,"vin":[{"txid":"9d7206d18679a663e9698a80cbf4949ef9940c346e4336f5d70a557dede20faa","vout":2,"scriptSig":{"asm":"","hex":""},"txinwitness":["304402202e8e796eb6ae4b6a2da3e8db545f6d9c0e928a9e95f060ea6521e9aa673998550220157a3689a604f90d0e20ef3d158e49afe8617f52df278d15f80ab4b5b56c638d01","0248cce9c5ad00e5c18eb3138495327b333ded7c3364b35d02272c569e78bb56a4"],"sequence":4294967295,"source":12830249,"value":"100000000","scriptPubKey":{"asm":"0 dc5db823be5eddf34c379732aa68a27d1b891f86","hex":"0014dc5db823be5eddf34c379732aa68a27d1b891f86","reqSigs":1,"type":"witness_v0_keyhash","addresses":["dgb1qm3wmsga7tmwlxnphjue2569z05dcj8uxjx69p6"]}}],"vout":[{"value":"600","scriptPubKey":{"asm":"0 b350efa6c03fe65a47207cddb0c10c5840b513d1","hex":"0014b350efa6c03fe65a47207cddb0c10c5840b513d1","reqSigs":1,"type":"witness_v0_keyhash","addresses":["dgb1qkdgwlfkq8ln953eq0nwmpsgvtpqt2y73vjz7j7"]},"vout":0,"assets":[{"assetId":"Ua9BVKiWLAQvsb2yonwVxv6CdEcxQHBN2qj8nv","amount":"1","decimals":0,"rules":true}]},{"value":"0","scriptPubKey":{"asm":"OP_RETURN 444103044c158eab1c9c2e0dda6c357733f7ac9eae786f9cac2b3f31660afdb672e43e9c014000000f000100","hex":"6a2c444103044c158eab1c9c2e0dda6c357733f7ac9eae786f9cac2b3f31660afdb672e43e9c014000000f000100","type":"nulldata"},"vout":1},{"value":"99999008","scriptPubKey":{"asm":"0 dc5db823be5eddf34c379732aa68a27d1b891f86","hex":"0014dc5db823be5eddf34c379732aa68a27d1b891f86","reqSigs":1,"type":"witness_v0_keyhash","addresses":["dgb1qm3wmsga7tmwlxnphjue2569z05dcj8uxjx69p6"]},"vout":2}],"hex":"01000000000101aa0fe2ed7d550ad7f536436e340c94f99e94f4cb808a69e963a67986d106729d0200000000ffffffff035802000000000000160014b350efa6c03fe65a47207cddb0c10c5840b513d100000000000000002e6a2c444103044c158eab1c9c2e0dda6c357733f7ac9eae786f9cac2b3f31660afdb672e43e9c014000000f00010020ddf50500000000160014dc5db823be5eddf34c379732aa68a27d1b891f860247304402202e8e796eb6ae4b6a2da3e8db545f6d9c0e928a9e95f060ea6521e9aa673998550220157a3689a604f90d0e20ef3d158e49afe8617f52df278d15f80ab4b5b56c638d01210248cce9c5ad00e5c18eb3138495327b333ded7c3364b35d02272c569e78bb56a400000000","blockhash":"0000000000000001a14327a7a961067581afe48485fc98ca4504bcef88b3c7b9","height":13564060,"time":1630319447};
+        let results = await assetDecoder(txData);
+        expect(results.rules.rewritable).to.equal( false);
+        expect(results.rules.vote.options.length).to.equal( 0);
+        expect(results.rules.vote.movable).to.equal( false);
+    });
+
 });
 
 
