@@ -14,6 +14,9 @@ const lookup=require('digiasset-lookup');
 
 /**
  * Looks for Assets encoded in data
+ *
+ * must first initialize by calling with config values in the form
+ * digiAssetDecoder({s3:{accessKeyId,secretAccessKey}}) or digiAssetDecoder({s3:async(Key)})
  * @param {TxData|{s3:{accessKeyId:string,secretAccessKey:string}|function,ipfs:?string}} tx
  * @return {Promise<boolean|DigiAssetIssuance|DigiAssetTransference>}
  */
