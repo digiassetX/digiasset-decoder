@@ -1,6 +1,6 @@
 {
   "name": "digiasset-decoder",
-  "version": "0.1.21",
+  "version": "0.1.22",
   "description": "Given an asset tx will decode the transaction and add output asset data",
   "main": "index.js",
   "scripts": {
