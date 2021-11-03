@@ -1,6 +1,6 @@
 {
   "name": "digiasset-decoder",
-  "version": "0.1.22",
+  "version": "0.1.23",
   "description": "Given an asset tx will decode the transaction and add output asset data",
   "main": "index.js",
   "scripts": {
@@ -11,7 +11,7 @@
   "license": "MIT",
   "dependencies": {
     "base58check": "^2.0.0",
-    "bit-io": "^1.0.4",
+    "bit-io": "^1.0.6",
     "digiasset-input": "^0.1.1",
     "digiasset-lookup": "^1.0.16",
     "digiasset_v3_constants": "^1.0.2",
