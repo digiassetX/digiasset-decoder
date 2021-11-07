@@ -1,6 +1,6 @@
 {
   "name": "digiasset-decoder",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Given an asset tx will decode the transaction and add output asset data",
   "main": "index.js",
   "scripts": {
@@ -19,8 +19,10 @@
     "ipfs-simple": "^0.0.14"
   },
   "devDependencies": {
+    "aws-sdk": "^2.1023.0",
+    "chai": "^4.3.4",
     "mocha": "^8.4.0",
-    "chai": "^4.3.4"
+    "sleep-promise": "^9.1.0"
   },
   "repository": {
     "type": "git",

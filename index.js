@@ -49,6 +49,7 @@ module.exports=async(tx)=>{
             break;
         }
     }
+    if (assetCommandData===undefined) return false;
 
     //make sure it is an asset
     if (assetCommandData.getHex(4)!=='4441') return false;

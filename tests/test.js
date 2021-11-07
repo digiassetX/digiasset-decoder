@@ -9,20 +9,50 @@ module.exports={
 }
 **************************************************************** */
 const assetDecoder = require('../index');
+const fs=require('fs');
+const IPFS = require("ipfs-simple");
 let config= {
     s3: {
         accessKeyId: 'REDACTED',
         secretAccessKey: 'REDACTED'
     }
 }
+let s3;
 try {
     config=require('./config');
     assetDecoder(config);
+
+    const AWS=require('aws-sdk');
+    s3 = new AWS.S3(config.s3);
 } catch (e) {
     //config missing
 }
 
 const expect    = require("chai").expect;
+
+
+
+
+
+/**
+ * Converts a stream to a string
+ * @param stream
+ * @return {Promise<string>}
+ */
+const streamToString=async (stream)=>{
+    return new Promise((resolve,reject) => {
+        const chunks = [];
+        stream.on("error", e => reject(e));
+        stream.on("data", chunk => chunks.push(chunk));
+        stream.on("end", () => {
+            try {
+                return resolve(Buffer.concat(chunks).toString())
+            } catch (e) {
+                reject(e);
+            }
+        });
+    });
+}
 
 
 
@@ -2467,4 +2497,93 @@ describe("V3 Transactions",function() {
 
 
 
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//_chain-tests.json
+const deepCompare=(test,data)=>{
+    if (typeof data==="bigint") data=data.toString();
+    expect(typeof data).to.equal(typeof test);
+    switch (typeof test) {
+        case "object":
+            for (let index in test) deepCompare(test[index],data[index]);
+            break;
+
+        default:
+            expect(data).to.equal(test);
+    }
+};
+
+
+describe("Chain Tests",async function() {
+    this.timeout(20000);
+    if (config.s3.accessKeyId==="REDACTED") {
+        expect("must configure s3 for this test").to.equal("s3 not configured");
+        return;
+    }
+    
+    //make sure we have test files
+    if (!fs.existsSync('tests/_chain-tests.json')) {
+        let data=await streamToString((await s3.getObject({
+            Bucket: "chaindata-digibyte",
+            Key:    "_chain-tests.json"
+        })).createReadStream());
+        fs.writeFileSync('tests/_chain-tests.json',data);
+    }
+    
+    //run tests
+    /** @type {{
+        "Issuance":         {data,test}[],
+        "Accidental Burn":  {data,test}[],
+        "Transfer":         {data,test}[],
+        "Burn":             {data,test}[]
+    }} */
+    let tests=JSON.parse(fs.readFileSync('tests/_chain-tests.json',{encoding:"utf-8"}));
+    for (let type in tests) {
+        for (let {data,test} of tests[type]) {
+            if (data.txid!=="781d7a9885506700d43eae9484113754ffa4e57c74ac148f1e5717de7e61c980") continue;
+            it(`${type} in ${data.txid}`,async()=>{
+
+
+                //reprocess chain data
+                let results=await assetDecoder(data);
+                if ((results===false)&&(type.indexOf("Burn")!==-1)) return;  //if not marked as a DigiAsset Transaction that is a burn
+                expect(results).to.not.equal(false);
+
+                //compare chain data to test
+                expect(results.type).to.equal(type);
+                deepCompare(test.chain,data);
+
+                //additional tests for issuance
+                if (type==="Issuance") {
+                    let {assetId,issuer,locked,aggregation,divisibility,cid,rules}=test;
+                    expect(results.assetId).to.equal(assetId);
+                    expect(results.issuer).to.equal(issuer);
+                    expect(results.locked).to.equal(locked);
+                    expect(results.aggregation).to.equal(aggregation);
+                    expect(results.divisibility).to.equal(divisibility);
+                    if (cid!==undefined) expect(IPFS.hashToCid(results.metadataHash)).to.equal(cid);    //cid may not exist since some V2 metadata has been lost
+                    deepCompare(rules,results.rules);
+                }
+
+
+            });
+        }
+    }
 });

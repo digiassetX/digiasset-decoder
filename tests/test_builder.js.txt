@@ -1,0 +1,208 @@
+/*
+        This file looks for chain transactions and builds a set of tests based on it.
+        To run remove the .txt in the name and run with
+
+        node test_builder.js
+
+        while in the tests folder
+*/
+
+
+
+const config=require('./config');
+
+const AWS=require('aws-sdk');
+const s3 = new AWS.S3(config.s3);
+const sleep=require('sleep-promise');
+const fs=require('fs');
+
+
+/**
+ * Converts a stream to a string
+ * @param stream
+ * @return {Promise<string>}
+ */
+const streamToString=async (stream)=>{
+    //console.log("file_35");
+    return new Promise((resolve,reject) => {
+        const chunks = [];
+        stream.on("error", e => reject(e));
+        stream.on("data", chunk => chunks.push(chunk));
+        stream.on("end", () => {
+            try {
+                return resolve(Buffer.concat(chunks).toString())
+            } catch (e) {
+                reject(e);
+            }
+        });
+    });
+}
+
+/**
+ *
+ * @param {Object}  opts
+ * @return {AsyncGenerator<*, void, *>}
+ */
+async function* listAllKeys(opts) {
+    opts = {...opts};
+    do {
+        const data = await s3.listObjectsV2(opts).promise();
+        opts.ContinuationToken = data.NextContinuationToken;
+        yield data;
+    } while (opts.ContinuationToken)
+}
+
+
+
+
+
+
+let txids={
+    "Issuance":         [],
+    "Accidental Burn":  [],
+    "Transfer":         [],
+    "Burn":             []
+};
+const gatherAssetTxs=async(assetId)=>{
+    //get data
+    let {txs,issuer,locked,aggregation,divisibility,metadata,rules}=JSON.parse(await streamToString((await s3.getObject({
+        Bucket: "chaindata-digibyte",
+        Key: assetId
+    })).createReadStream()));
+
+    //collect transfer/accidental burn txs
+    for (let {txid,type} of txs) {
+        if (type==="Issuance") continue;
+        if (txids[type].indexOf(txid)===-1) txids[type].push(txid);
+    }
+
+    //collect issuance data
+    txids["Issuance"].push({assetId,issuer,locked,aggregation,divisibility,metadata,rules});
+}
+
+
+(async()=>{
+
+
+
+
+
+    // STEP 1 - GET ALL ASSET TXIDs
+    console.log("Step 1");
+
+
+
+
+
+    //go through each locked asset that exists
+    let opts = {
+        Bucket: "chaindata-digibyte",
+        Prefix: "L"
+    };
+    for await (const data of listAllKeys(opts)) {
+        for (let {Key} of data.Contents) await gatherAssetTxs(Key);
+        console.log("L");
+    }
+
+    //go through each unlocked asset
+    opts = {
+        Bucket: "chaindata-digibyte",
+        Prefix: "U"
+    };
+    for await (const data of listAllKeys(opts)) {
+        for (let {Key} of data.Contents) await gatherAssetTxs(Key);
+        console.log("U");
+    }
+
+
+
+
+    //STEP 2 - GET TX DATA and create tests
+    console.log("Step 2");
+
+
+    let tests={
+        "Issuance":         [],
+        "Accidental Burn":  [],
+        "Transfer":         [],
+        "Burn":             []
+    }
+
+    //Issuance Tests
+    for (let {assetId,issuer,locked,aggregation,divisibility,metadata,rules} of txids["Issuance"]) {
+        for (let {txid,cid} of metadata) {
+            //get the tx data
+            let data=JSON.parse(await streamToString((await s3.getObject({
+                Bucket: "chaindata-digibyte",
+                Key: txid
+            })).createReadStream()));
+
+            //create copy of data we wish to test against
+            let test={
+                chain: {
+                    txid:   data.txid,
+                    height: data.height,
+                    time:   data.time,
+                    vout:   []
+                },
+                assetId,issuer,locked,aggregation,divisibility,cid
+            };
+            for (let {value,vout,assets} of data.vout) {
+                test.chain.vout.push({value,vout,assets});
+            }
+            if (rules!==undefined) {
+                for (let rule of rules) {
+                    if (rule.effective > data.height) break;
+                    test.rules=rule;
+                    delete test.rules.effective;
+                }
+            }
+            tests["Issuance"].push({data,test});
+
+
+        }
+    }
+    console.log("Issuance done");
+
+
+
+    //transfer tests
+    const testTransfer=async(type,txid)=>{
+
+        //get the tx data
+        let data=JSON.parse(await streamToString((await s3.getObject({
+            Bucket: "chaindata-digibyte",
+            Key: txid
+        })).createReadStream()));
+
+        //create copy of data we wish to test against
+        let test={
+            chain: {
+                txid:   data.txid,
+                height: data.height,
+                time:   data.time,
+                vout:   []
+            }
+        };
+        for (let {value,vout,assets} of data.vout) {
+            test.chain.vout.push({value,vout,assets});
+        }
+
+        tests[type].push({data,test});
+    }
+    for (let txid of txids["Transfer"]) await testTransfer("Transfer",txid);
+    console.log("Transfer done");
+    for (let txid of txids["Accidental Burn"]) await testTransfer("Accidental Burn",txid);
+    console.log("Accidental Burn done");
+    for (let txid of txids["Burn"]) await testTransfer("Burn",txid);
+    console.log("Burn done");
+
+    fs.writeFileSync('_chain-tests.json',JSON.stringify(tests));
+
+
+
+
+
+    console.log("done");
+    while(true) await sleep(100000);
+})();
