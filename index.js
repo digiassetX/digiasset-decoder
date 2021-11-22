@@ -18,9 +18,10 @@ const lookup=require('digiasset-lookup');
  * must first initialize by calling with config values in the form
  * digiAssetDecoder({s3:{accessKeyId,secretAccessKey}}) or digiAssetDecoder({s3:async(Key)})
  * @param {TxData|{s3:{accessKeyId:string,secretAccessKey:string}|function,ipfs:?string}} tx
+ * @param {int} timeout - max time to wait on ipfs data defaults to 10min
  * @return {Promise<boolean|DigiAssetIssuance|DigiAssetTransference>}
  */
-module.exports=async(tx)=>{
+module.exports=async(tx,timeout=600000)=>{
     //see if setting up lookup
     if ((tx.s3!==undefined)||(tx.ipfs!==undefined)) {
         if (tx.s3!==undefined) lookup.initS3(tx.s3);
@@ -80,7 +81,7 @@ module.exports=async(tx)=>{
         // noinspection JSCheckFunctionSignatures
         return issuance({
             tx,opcode,version,assetCommandData
-        });
+        },timeout);
 
 
 
