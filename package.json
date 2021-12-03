@@ -1,6 +1,6 @@
 {
   "name": "digiasset-decoder",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Given an asset tx will decode the transaction and add output asset data",
   "main": "index.js",
   "scripts": {
@@ -13,10 +13,10 @@
     "base58check": "^2.0.0",
     "bit-io": "^1.0.6",
     "digiasset-input": "^0.1.1",
-    "digiasset-lookup": "^1.1.0",
+    "digiasset-lookup": "^1.1.1",
     "digiasset_v3_constants": "^1.0.2",
     "digiassetx-digibyte-stream-types": "^1.0.9",
-    "ipfs-simple": "^0.1.4"
+    "ipfs-simple": "^0.1.5"
   },
   "devDependencies": {
     "aws-sdk": "^2.1023.0",
