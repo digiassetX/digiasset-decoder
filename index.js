@@ -17,7 +17,7 @@ const lookup=require('digiasset-lookup');
  *
  * must first initialize by calling with config values in the form
  * digiAssetDecoder({s3:{accessKeyId,secretAccessKey}}) or digiAssetDecoder({s3:async(Key)})
- * @param {TxData|{s3:{accessKeyId:string,secretAccessKey:string}|function,ipfs:?string}} tx
+ * @param {TxData|{s3:{accessKeyId:string,secretAccessKey:string}|function,ipfs:?string|IPFS}} tx
  * @param {int} timeout - max time to wait on ipfs data defaults to 10min
  * @return {Promise<boolean|DigiAssetIssuance|DigiAssetTransference>}
  */
