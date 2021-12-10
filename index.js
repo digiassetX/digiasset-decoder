@@ -5,6 +5,7 @@ const issuance=require('./lib/issuance');
 const transfer=require('./lib/transfer');
 
 const lookup=require('digiasset-lookup');
+const ExpectedError=require("./lib/ExpectedError");
 
 
 
@@ -64,7 +65,7 @@ module.exports=async(tx,timeout=600000)=>{
 
     //get opcode
     const opcode = assetCommandData.getInt(8);
-    if (opcode === 0) throw new Error("Invalid Op Code: "+tx.txid);
+    if (opcode === 0) throw new ExpectedError("Invalid Op Code: "+tx.txid);
     if (opcode < 16) {
 
 
